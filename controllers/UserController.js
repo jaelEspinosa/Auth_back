@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import generarJWT from "../helpers/jwt.js"
 import generarId from "../helpers/generarId.js"
 import User from "../models/UserModel.js"
+import { emailRegistro, resetPassword } from '../helpers/emails.js'
 
 
 const register = async ( req, res )=>{
@@ -10,7 +11,7 @@ const register = async ( req, res )=>{
    const { email, password } = req.body 
    let user = await User.findOne({ email })
 
-   // prevenir un usuario registrado
+   // prevenir un usuario duplicado
 
    if( user ){
        return res.status(401).json({ msg: 'Este usuario ya existe'})
@@ -18,17 +19,20 @@ const register = async ( req, res )=>{
 
    try {
 
-    // guardar un nuevo Veterinario
+    // guardar un nuevo usuario
 
     user = new User( req.body )
 
-    // hashear password, asi lo puse, pero se puede hacer en el model. (ver en VeterinarioModel.js)
+    // hashear password, se puede así, pero se puede hacer en el model. (ver en UserModel.js)
     // const salt = bcrypt.genSaltSync()
-    // veterinario.password = bcrypt.hashSync(password, salt)
+    // user.password = bcrypt.hashSync(password, salt)
     
     const userGuardado = await user.save()
+    
+    //enviar correo de confirmacion con el token unico
+    await emailRegistro( userGuardado)
+   
     return res.status(200).json({ msg:'usuario Guardado', userGuardado })
-
   
     } catch (error) {
         console.log(error)
@@ -134,7 +138,11 @@ const olvidePassword = async ( req, res ) =>{
     try {
         existeUser.token = generarId()
         await existeUser.save()
-        res.status(200).json({msg: 'Revisa tu bandeja de entrada y sigue las indicaciones'})
+       
+        await resetPassword( existeUser )
+        return res.status(200).json({msg: 'Revisa tu bandeja de entrada y sigue las indicaciones'})
+
+
     } catch (error) {
         console.log(error)
     }
