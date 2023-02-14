@@ -29,6 +29,6 @@ EMAIL_HOST=smtp.gmail.com
 EMAIL_PASS= password de la cuenta email
 EMAIL_PORT=465
 EMAIL_USER= usuario email
-FRONTEND_URL= url del front para construir el enlace de activacion de cuenta
+FRONTEND_URL= url del front 
 
 ```
